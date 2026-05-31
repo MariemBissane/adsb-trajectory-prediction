@@ -1,198 +1,215 @@
-# ✈️ Prédiction de Trajectoires d'Avions à partir de Données ADS-B
+# Aircraft Trajectory Prediction using ADS-B Data
 
-##  Description
+## Project Overview
 
-Ce projet vise à prédire la trajectoire future des avions à partir de données ADS-B issues du réseau OpenSky.
-L'objectif est d'exploiter des séries temporelles réelles, bruitées et irrégulières afin de construire des modèles de Machine Learning et Deep Learning capables d’anticiper le comportement des avions.
+This project focuses on predicting aircraft trajectories using Machine Learning and Deep Learning techniques applied to real-world ADS-B aviation data from the OpenSky Network.
+
+The objective is to forecast future aircraft positions (latitude, longitude, altitude) from historical flight trajectories in order to support:
+
+* Air Traffic Management (ATM)
+* Flight anomaly detection
+* Route optimization
+* Aviation data analysis
+
+The project implements a complete AI pipeline including:
+
+* Data collection
+* Exploratory Data Analysis (EDA)
+* Data cleaning
+* Feature engineering
+* Machine Learning models
+* Deep Learning architectures
+* Hyperparameter optimization
 
 ---
 
 ## Dataset
 
-* Source : OpenSky Network Historical Data
-* Lien : https://opensky-network.org/datasets/#states/
+Source: OpenSky Network Historical Dataset
 
- Stratégie :
+* Date used: July 3rd, 2017
+* Time range: 10:00 → 17:00 UTC
+* Raw observations: ~17.8 million ADS-B records
+* Final processed dataset: ~11.7 million clean records
+* Continuous trajectories generated: ~40,205
 
-* Utiliser un **échantillon réduit** pour le prototypage
-* Étendre ensuite à un dataset plus large pour améliorer les performances
+ADS-B variables include:
 
----
-
-##  Objectifs
-
-Prédire la trajectoire future d’un avion sur un horizon de **2 à 10 minutes** selon deux approches :
-
-### Régression
-
-* Prédire les **N prochaines positions** :
-
-  * Latitude
-  * Longitude
-  * Altitude
-
-###  Classification
-
-* Prédire l’**intention de vol** :
-
-  * Approche
-  * Montée
-  * Virage
-  * Maintien
+* Latitude / Longitude
+* Velocity
+* Heading
+* Vertical rate
+* Altitude
+* Aircraft identifier (icao24)
+* Callsign
+* Timestamp
 
 ---
 
-#  PARTIE 1 — Machine Learning
+## Data Processing Pipeline
 
-##  Prétraitement des données
+### 1. Exploratory Data Analysis (EDA)
 
-* Resampling temporel :
+Performed analyses:
 
-  * Uniformisation (ex : 1 point toutes les 5s ou 10s)
-* Filtrage du bruit
-* Normalisation des variables
+* Missing values analysis
+* Correlation heatmaps
+* Pair plots
+* Velocity-altitude relationships
+* Temporal traffic analysis
 
----
+### 2. Data Cleaning
 
-##  Feature Engineering
+A 16-step cleaning pipeline was implemented:
 
-### Variables physiques
+* Removal of invalid coordinates
+* Missing trajectory filtering
+* Altitude fusion (`geoaltitude` + `baroaltitude`)
+* Duplicate removal
+* Chronological sorting
+* Quality validation
+
+### 3. Feature Engineering
+
+Generated features include:
 
 * Ground speed
-* Vertical rate
 * Acceleration
 * Turn rate
+* Vertical speed
+* Distance traveled
+* Rolling statistics
+* Flight phase classification
+* Velocity vector decomposition
 
-### Variables géométriques
+### 4. Temporal Resampling
 
-* Distance à la destination
-* Angle de trajectoire
-
-### Variables statistiques
-
-* Rolling mean / std (fenêtres glissantes)
-
-### Variables métier
-
-* Phase de vol estimée
+Trajectories were resampled every 10 seconds to create homogeneous sequences suitable for sequential deep learning models.
 
 ---
 
-##  Réduction de dimension
+## Machine Learning Models
 
-* PCA sur les features dérivées
+Implemented models:
 
----
+| Model                       | Task                        |
+| --------------------------- | --------------------------- |
+| Decision Tree Regressor     | Trajectory prediction       |
+| Random Forest Regressor     | Trajectory prediction       |
+| Gradient Boosting Regressor | Trajectory prediction       |
+| PCA + SVM (RBF)             | Flight phase classification |
 
-##  Modèles utilisés
+### Best ML Result
 
-* Random Forest (régression multi-sortie)
-* Gradient Boosting
-* SVM (kernel RBF) pour classification
-* Baseline : Arbre de décision
+Gradient Boosting achieved:
 
----
-
-##  Évaluation
-
-### Régression
-
-* RMSE / MAE (lat, lon, altitude)
-* Distance moyenne de déviation
-
-### Classification
-
-* Accuracy
-* F1-score
+* Haversine Error: ~4.5 km
+* Strong trajectory tracking performance
+* Good robustness on long trajectories
 
 ---
 
-#  PARTIE 2 — Deep Learning
+## Deep Learning Models
 
-##  Architectures
+Implemented architectures:
 
-### Réseaux récurrents
-
-* LSTM
-* GRU
-
-Entrée :
-
-```
-[lat, lon, alt, vx, vy, vz, heading]
-```
-
-### Réseaux convolutifs temporels
-
+* GRU (Gated Recurrent Unit)
+* LSTM (Long Short-Term Memory)
 * TCN (Temporal Convolutional Network)
 
----
+### Best DL Model
 
-##  Livrables Deep Learning
+TCN achieved the best baseline performance:
 
-* Visualisation trajectoire réelle vs prédite (Folium / Plotly)
-* Courbes d’erreur selon horizon (1min, 3min, 5min)
-* Analyse de l’impact du resampling
+* Average trajectory deviation: ~15.7 km
+* Excellent long-sequence modeling
+* Stable training on CPU
 
----
-
-#  Optimisation & Entraînement
-
-##  Learning Rate
-
-* Scheduler (ex : ReduceLROnPlateau)
-
-##  Stabilité & Généralisation
-
-* Étude de la taille des minibatchs
-* Utilisation du Dropout
-
-##  Contrôle de l’entraînement
-
-* EarlyStopping
-* GridSearchCV / Optuna
+Hyperparameter tuning was performed using Optuna.
 
 ---
 
-#  Analyse de Performance
-
-* Courbes d’apprentissage (Train vs Validation)
-* Comparaison avant/après tuning
-* Analyse des résidus (régression)
-* Matrice de confusion / ROC-AUC (classification)
-
----
-
-#  Structure du projet
-
-( pas encore définit )
----
-
-#  Livrables
-
-*  Notebook Machine Learning
-*  Notebook Deep Learning
-*  Pipeline automatique
-*  Rapport technique
-
----
-
-#  Technologies utilisées
+## Technologies Used
 
 * Python
-* Pandas / NumPy
+* Pandas
+* NumPy
 * Scikit-learn
-* PyTorch / TensorFlow
-* Matplotlib / Seaborn / Plotly
+* PyTorch
+* Optuna
+* Matplotlib
+* Seaborn
+* Jupyter Notebook
+
 
 ---
 
-#  Conclusion
+## Installation
 
-Ce projet permet de manipuler des données réelles complexes et d’explorer des approches avancées en Machine Learning et Deep Learning pour la prédiction de trajectoires aériennes.
+Create a virtual environment:
+
+```bash
+python -m venv venv
+```
+
+Activate the environment:
+
+### Windows
+
+```bash
+venv\Scripts\activate
+```
+
+### Linux / MacOS
+
+```bash
+source venv/bin/activate
+```
+
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
 
 ---
 
-##  Auteur
+## Usage
 
-* Projet académique — Génie Informatique
+Run notebooks or scripts for:
+
+1. Data preprocessing
+2. Trajectory cleaning
+3. Feature engineering
+4. Model training
+5. Evaluation and visualization
+
+---
+
+## Results
+
+### Machine Learning
+
+| Model             | Haversine Error |
+| ----------------- | --------------- |
+| Decision Tree     | 20.6 km         |
+| Random Forest     | 16.8 km         |
+| Gradient Boosting | 4.5 km          |
+
+### Deep Learning
+
+| Model | Average Deviation |
+| ----- | ----------------- |
+| GRU   | 17.15 km          |
+| LSTM  | 18.04 km          |
+| TCN   | 15.74 km          |
+
+---
+
+
+
+---
+
+## License
+
+This project is intended for academic and research purposes.
