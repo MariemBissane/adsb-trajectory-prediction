@@ -3,6 +3,7 @@
 ## Project Overview
 
 This project focuses on predicting aircraft trajectories using Machine Learning and Deep Learning techniques applied to real-world ADS-B aviation data from the OpenSky Network.
+This is a team project carried out at AIAC by a team of six students, where I was in charge of the **Deep Learning part** (GRU, LSTM and TCN models).
 
 The objective is to forecast future aircraft positions (latitude, longitude, altitude) from historical flight trajectories in order to support:
 
